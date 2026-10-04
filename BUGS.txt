@@ -1,0 +1,45 @@
+ERIC Robotics Level 1 ROS2 Assignment - Bug Report
+Author: Chaitanya Sakhawalkar
+
+Each entry: file | problem | symptom | fix
+
+1. testbed_description/CMakeLists.txt
+    Problem : Syntax error in the ament_package call (missing brackets).
+    Symptom : colcon build failed for testbed_description.
+    Fix     : Corrected the call to ament_package().
+
+2. testbed_description/urdf/testbed.gazebo (lidar, head_hokuyo_sensor)
+    Problem : Maximum range was 1.5 m (and minimum 0.10 m).
+    Symptom : In open areas every beam returned inf; /scan was not visible in RViz.
+    Fix     : Set <max> to 12 and <min> to 0.15.
+
+3. testbed_description/urdf/testbed.gazebo (lidar, head_hokuyo_sensor)
+    Problem : Sensor origin lay inside the lidar's own collision mesh (mesh spans z=0.224..0.254 in the
+              base_link frame, sensor origin at z=0.228; derived from the STL bounding boxes).
+    Symptom : Rays start inside the lidar body, so beams can hit the sensor's own mesh and return invalid readings.
+    Fix     : Raised the sensor with <pose>0 0 0.05 0 0 0</pose> so the rays start above the mesh.
+
+4. testbed_description/urdf/testbed.gazebo (IMU plugin)
+    Problem : Stray ">" after </initial_orientation_as_reference>.
+    Symptom : Malformed text inside the plugin block (xmllint does not flag it because it is valid text content).
+    Fix     : Removed the extra ">".
+
+5. testbed_description/launch/robot_description.launch.py
+    Problem : robot_state_publisher did not set use_sim_time while Gazebo, RViz and Nav2 use simulation time.
+    Symptom : robot_state_publisher ran on wall time; RViz reported TF message-filter timing warnings.
+    Fix     : Added 'use_sim_time': True to the node parameters.
+
+6. testbed_bringup/maps/testbed_world.yaml
+    Problem : image: pointed to "wrong_path_testbed_world.pgm", a file that does not exist.
+    Symptom : map_server could not load the map; RViz showed no map.
+    Fix     : Changed to image: testbed_world.pgm.
+
+7. testbed_bringup/CMakeLists.txt
+    Problem : install(DIRECTORY ...) installed only "launch"; the "maps" directory was never installed.
+    Symptom : maps/ was missing from install/testbed_bringup/share/testbed_bringup/, so the installed map files did not exist.
+    Fix     : Added "maps" to the install(DIRECTORY ...) list.
+
+8. testbed_gazebo/CMakeLists.txt
+    Problem : "models" directory was not installed, but the launch file adds share/testbed_gazebo/models to GAZEBO_MODEL_PATH.
+    Symptom : GAZEBO_MODEL_PATH pointed to a directory that did not exist after the build.
+    Fix     : Added "models" to the install(DIRECTORY ...) list.
